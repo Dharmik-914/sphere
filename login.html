@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Access Terminal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #000;
+            color: #0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .binary-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.15;
+            overflow: hidden;
+        }
+        
+        .binary-column {
+            position: absolute;
+            top: -1000px;
+            font-size: 20px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+            white-space: nowrap;
+        }
+        
+        .login-container {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid #0f0;
+            box-shadow: 0 0 20px #0f0, inset 0 0 10px rgba(0, 255, 0, 0.5);
+            border-radius: 5px;
+            padding: 30px;
+            width: 350px;
+            text-align: center;
+        }
+        
+        .login-header {
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #0f0;
+            text-shadow: 0 0 5px #0f0;
+        }
+        
+        .login-header p {
+            font-size: 12px;
+            color: #0f0;
+            opacity: 0.7;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #0f0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            background-color: #000;
+            border: 1px solid #0f0;
+            border-radius: 3px;
+            color: #0f0;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .login-button {
+            background-color: #000;
+            color: #0f0;
+            border: 1px solid #0f0;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-button:hover {
+            background-color: #0f0;
+            color: #000;
+            box-shadow: 0 0 15px #0f0;
+        }
+        
+        .login-footer {
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .login-footer a {
+            color: #0f0;
+            text-decoration: none;
+        }
+        
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .scanner {
+            position: absolute;
+            height: 2px;
+            background: rgba(0, 255, 0, 0.8);
+            box-shadow: 0 0 15px 3px #0f0;
+            top: 0;
+            width: 100%;
+            left: 0;
+            animation: scan 3s linear infinite;
+            z-index: 3;
+        }
+        
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+            100% {
+                top: 100%;
+            }
+        }
+        
+        .terminal-effect::before {
+            content: "_";
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+        
+        .access-denied {
+            display: none;
+            color: #f00;
+            margin-top: 15px;
+            font-weight: bold;
+            text-shadow: 0 0 5px #f00;
+            animation: flicker 0.3s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="binary-background" id="binaryBackground"></div>
+    
+    <div class="login-container">
+        <div class="scanner"></div>
+        
+        <div class="login-header">
+            <h1>Secure Access <span class="terminal-effect"></span></h1>
+            <p>AUTHENTICATION REQUIRED</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" autocomplete="off" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            
+            <button type="submit" class="login-button">Login</button>
+            
+            <div class="access-denied" id="accessDenied">ACCESS DENIED</div>
+        </form>
+        
+        <div class="login-footer">
+            <p>Security Protocol v3.7</p>
+            <p><a href="#">Forgot Credentials?</a></p>
+        </div>
+    </div>
+    
+    <script>
+        // Binary background animation
+        const binaryBackground = document.getElementById('binaryBackground');
+        const columnCount = Math.floor(window.innerWidth / 20);
+        
+        function generateBinary() {
+            return Math.random() > 0.5 ? '1' : '0';
+        }
+        
+        function createBinaryColumn() {
+            const column = document.createElement('div');
+            column.className = 'binary-column';
+            
+            const left = Math.floor(Math.random() * window.innerWidth);
+            const speed = 1 + Math.random() * 3;
+            const delay = Math.random() * 10;
+            let content = '';
+            
+            for (let i = 0; i < 50; i++) {
+                content += generateBinary() + '<br>';
+            }
+            
+            column.innerHTML = content;
+            column.style.left = `${left}px`;
+            
+            column.animate(
+                [
+                    { top: '-1000px' },
+                    { top: '100vh' }
+                ],
+                {
+                    duration: 20000 / speed,
+                    delay: delay * 1000,
+                    iterations: Infinity
+                }
+            );
+            
+            binaryBackground.appendChild(column);
+        }
+        
+        // Create initial binary columns
+        for (let i = 0; i < columnCount; i++) {
+            createBinaryColumn();
+        }
+        
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulate authentication process
+            const accessDenied = document.getElementById('accessDenied');
+            accessDenied.style.display = 'block';
+            
+            setTimeout(() => {
+                accessDenied.style.display = 'none';
+            }, 3000);
+        });
+        
+        // Periodically refresh binary columns
+        setInterval(() => {
+            if (binaryBackground.children.length < columnCount) {
+                createBinaryColumn();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
